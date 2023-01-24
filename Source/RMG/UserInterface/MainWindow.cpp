@@ -171,6 +171,12 @@ void MainWindow::initializeUI(void)
             &MainWindow::on_EventFilter_KeyPressed);
     connect(this->ui_EventFilter, &EventFilter::on_EventFilter_KeyReleased, this,
             &MainWindow::on_EventFilter_KeyReleased);
+    connect(this->ui_EventFilter, &EventFilter::on_EventFilter_MouseMoved, this,
+            &MainWindow::on_EventFilter_MouseMoved);
+    connect(this->ui_EventFilter, &EventFilter::on_EventFilter_MouseButtonPressed, this,
+            &MainWindow::on_EventFilter_MouseButtonPressed);
+    connect(this->ui_EventFilter, &EventFilter::on_EventFilter_MouseButtonReleased, this,
+            &MainWindow::on_EventFilter_MouseButtonReleased);
 }
 
 void MainWindow::configureUI(QApplication* app)
@@ -801,6 +807,48 @@ void MainWindow::on_EventFilter_KeyReleased(QKeyEvent *event)
     int mod = Utilities::QtModKeyToSdl2ModKey(event->modifiers());
 
     CoreSetKeyUp(key, mod);
+}
+
+void MainWindow::on_EventFilter_MouseMoved(QMouseEvent *event)
+{
+    if (!CoreIsEmulationRunning())
+    {
+        QMainWindow::mouseMoveEvent(event);
+        return;
+    }
+
+    int x = event->globalPosition().x();
+    int y = event->globalPosition().y();
+
+    CoreSetMouseMove(x, y);
+}
+
+void MainWindow::on_EventFilter_MouseButtonPressed(QMouseEvent *event)
+{
+    if (!CoreIsEmulationRunning())
+    {
+        QMainWindow::mouseMoveEvent(event);
+        return;
+    }
+
+    this->ui_LeftMouseButtonState  = (event->button() == Qt::MouseButton::LeftButton  ? 1 : this->ui_LeftMouseButtonState);
+    this->ui_RightMouseButtonState = (event->button() == Qt::MouseButton::RightButton ? 1 : this->ui_RightMouseButtonState);
+
+    CoreSetMouseButton(this->ui_LeftMouseButtonState, this->ui_RightMouseButtonState);
+}
+
+void MainWindow::on_EventFilter_MouseButtonReleased(QMouseEvent *event)
+{
+    if (!CoreIsEmulationRunning())
+    {
+        QMainWindow::mouseMoveEvent(event);
+        return;
+    }
+
+    this->ui_LeftMouseButtonState  = (event->button() == Qt::MouseButton::LeftButton  ? 0 : this->ui_LeftMouseButtonState);
+    this->ui_RightMouseButtonState = (event->button() == Qt::MouseButton::RightButton ? 0 : this->ui_RightMouseButtonState);
+
+    CoreSetMouseButton(this->ui_LeftMouseButtonState, this->ui_RightMouseButtonState);
 }
 
 void MainWindow::on_QGuiApplication_applicationStateChanged(Qt::ApplicationState state)
