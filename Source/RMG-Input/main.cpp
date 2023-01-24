@@ -23,6 +23,7 @@
 
 #include <iostream>
 #include <chrono>
+#include <vector>
 
 //
 // Local Defines
@@ -96,6 +97,12 @@ struct InputProfile
     InputMapping AnalogStick_Right;
 };
 
+struct MouseMovement
+{
+    int x;
+    int y;
+};
+
 //
 // Local variables
 //
@@ -114,6 +121,11 @@ static CONTROL_INFO l_ControlInfo;
 
 // keyboard state
 static bool l_KeyboardState[SDL_NUM_SCANCODES];
+
+// mouse movements
+static std::mutex l_MouseMutex;
+static std::vector<MouseMovement> l_MouseMovements;
+static bool l_MouseButtonState[2];
 
 //
 // Local Functions
@@ -226,7 +238,14 @@ static void apply_controller_profiles(void)
         l_ControlInfo.Controls[i].Present = profile->PluggedIn ? 1 : 0;
         l_ControlInfo.Controls[i].Plugin  = plugin;
         l_ControlInfo.Controls[i].RawData = 0;
-        l_ControlInfo.Controls[i].Type    = CONT_TYPE_STANDARD;
+        if (i == 0)
+        {
+            l_ControlInfo.Controls[i].Type    = CONT_TYPE_MOUSE;
+        }
+        else
+        {
+            l_ControlInfo.Controls[i].Type    = CONT_TYPE_STANDARD;
+        }
     }
 }
 
@@ -648,6 +667,7 @@ EXPORT void CALL ControllerCommand(int Control, unsigned char* Command)
     }
 }
 
+#include <iostream>
 EXPORT void CALL GetKeys(int Control, BUTTONS* Keys)
 {
     InputProfile* profile = &l_InputProfiles[Control];
@@ -695,6 +715,35 @@ EXPORT void CALL GetKeys(int Control, BUTTONS* Keys)
     Keys->L_TRIG       = get_button_state(profile, &profile->Button_LeftTrigger);
     Keys->R_TRIG       = get_button_state(profile, &profile->Button_RightTrigger);
     Keys->Z_TRIG       = get_button_state(profile, &profile->Button_ZTrigger);
+
+    if (Control == 0)
+    {
+        // mouse
+        l_MouseMutex.lock();
+        
+        // set left & right button state
+        Keys->A_BUTTON = l_MouseButtonState[0];
+        Keys->B_BUTTON = l_MouseButtonState[1];
+
+        if (!l_MouseMovements.empty())
+        {
+            int x = 0, y = 0;
+
+            // calculate how much the mouse has moved
+            x = l_MouseMovements.front().x - l_MouseMovements.back().x;
+            y = l_MouseMovements.front().y - l_MouseMovements.back().y;
+
+            std::cout << "x: " << x << ", y: " << y << std::endl;
+
+            Keys->X_AXIS = -x;
+            Keys->Y_AXIS = y;
+
+            l_MouseMovements.clear();
+        }
+
+        l_MouseMutex.unlock();
+        return;
+    }
 
     double inputX = 0, inputY = 0;
     inputY = get_axis_state(profile, &profile->AnalogStick_Up,    1, inputY);
@@ -757,4 +806,19 @@ EXPORT void CALL SDL_KeyDown(int keymod, int keysym)
 EXPORT void CALL SDL_KeyUp(int keymod, int keysym)
 {
     l_KeyboardState[keysym] = false;
+}
+
+EXPORT void CALL MouseMove(int x, int y)
+{
+    l_MouseMutex.lock();
+    l_MouseMovements.push_back({x, y});
+    l_MouseMutex.unlock();
+}
+
+EXPORT void CALL MouseButton(int left, int right)
+{
+    l_MouseMutex.lock();
+    l_MouseButtonState[0] = left;
+    l_MouseButtonState[1] = right;
+    l_MouseMutex.unlock();
 }
