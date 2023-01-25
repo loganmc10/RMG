@@ -60,6 +60,8 @@ struct InputProfile
     bool PluggedIn    = false;
     int DeadzoneValue = 0;
 
+    InputDeviceType DeviceType = InputDeviceType::Controller;
+
     N64ControllerPak ControllerPak = N64ControllerPak::None;
 
     // input device information
@@ -177,6 +179,7 @@ static void load_settings(void)
 
         profile->PluggedIn = CoreSettingsGetBoolValue(SettingsID::Input_PluggedIn, section);
         profile->DeadzoneValue = CoreSettingsGetIntValue(SettingsID::Input_Deadzone, section);
+        profile->DeviceType = (InputDeviceType)CoreSettingsGetIntValue(SettingsID::Input_InputType, section);
         profile->ControllerPak = (N64ControllerPak)CoreSettingsGetIntValue(SettingsID::Input_Pak, section);
         profile->DeviceName = CoreSettingsGetStringValue(SettingsID::Input_DeviceName, section);
         profile->DeviceNum = CoreSettingsGetIntValue(SettingsID::Input_DeviceNum, section);
@@ -238,14 +241,7 @@ static void apply_controller_profiles(void)
         l_ControlInfo.Controls[i].Present = profile->PluggedIn ? 1 : 0;
         l_ControlInfo.Controls[i].Plugin  = plugin;
         l_ControlInfo.Controls[i].RawData = 0;
-        if (i == 0)
-        {
-            l_ControlInfo.Controls[i].Type    = CONT_TYPE_MOUSE;
-        }
-        else
-        {
-            l_ControlInfo.Controls[i].Type    = CONT_TYPE_STANDARD;
-        }
+        l_ControlInfo.Controls[i].Type    = (profile->DeviceType == InputDeviceType::Controller ? CONT_TYPE_STANDARD : CONT_TYPE_MOUSE);
     }
 }
 
@@ -701,24 +697,8 @@ EXPORT void CALL GetKeys(int Control, BUTTONS* Keys)
         }
     }
 
-    Keys->A_BUTTON     = get_button_state(profile, &profile->Button_A);
-    Keys->B_BUTTON     = get_button_state(profile, &profile->Button_B);
-    Keys->START_BUTTON = get_button_state(profile, &profile->Button_Start);
-    Keys->U_DPAD       = get_button_state(profile, &profile->Button_DpadUp);
-    Keys->D_DPAD       = get_button_state(profile, &profile->Button_DpadDown);
-    Keys->L_DPAD       = get_button_state(profile, &profile->Button_DpadLeft);
-    Keys->R_DPAD       = get_button_state(profile, &profile->Button_DpadRight);
-    Keys->U_CBUTTON    = get_button_state(profile, &profile->Button_CButtonUp);
-    Keys->D_CBUTTON    = get_button_state(profile, &profile->Button_CButtonDown);
-    Keys->L_CBUTTON    = get_button_state(profile, &profile->Button_CButtonLeft);
-    Keys->R_CBUTTON    = get_button_state(profile, &profile->Button_CButtonRight);
-    Keys->L_TRIG       = get_button_state(profile, &profile->Button_LeftTrigger);
-    Keys->R_TRIG       = get_button_state(profile, &profile->Button_RightTrigger);
-    Keys->Z_TRIG       = get_button_state(profile, &profile->Button_ZTrigger);
-
-    if (Control == 0)
-    {
-        // mouse
+    if (profile->DeviceType == InputDeviceType::Mouse)
+    { // n64 mouse
         l_MouseMutex.lock();
         
         // set left & right button state
@@ -733,8 +713,6 @@ EXPORT void CALL GetKeys(int Control, BUTTONS* Keys)
             x = l_MouseMovements.front().x - l_MouseMovements.back().x;
             y = l_MouseMovements.front().y - l_MouseMovements.back().y;
 
-            std::cout << "x: " << x << ", y: " << y << std::endl;
-
             Keys->X_AXIS = -x;
             Keys->Y_AXIS = y;
 
@@ -744,6 +722,21 @@ EXPORT void CALL GetKeys(int Control, BUTTONS* Keys)
         l_MouseMutex.unlock();
         return;
     }
+
+    Keys->A_BUTTON     = get_button_state(profile, &profile->Button_A);
+    Keys->B_BUTTON     = get_button_state(profile, &profile->Button_B);
+    Keys->START_BUTTON = get_button_state(profile, &profile->Button_Start);
+    Keys->U_DPAD       = get_button_state(profile, &profile->Button_DpadUp);
+    Keys->D_DPAD       = get_button_state(profile, &profile->Button_DpadDown);
+    Keys->L_DPAD       = get_button_state(profile, &profile->Button_DpadLeft);
+    Keys->R_DPAD       = get_button_state(profile, &profile->Button_DpadRight);
+    Keys->U_CBUTTON    = get_button_state(profile, &profile->Button_CButtonUp);
+    Keys->D_CBUTTON    = get_button_state(profile, &profile->Button_CButtonDown);
+    Keys->L_CBUTTON    = get_button_state(profile, &profile->Button_CButtonLeft);
+    Keys->R_CBUTTON    = get_button_state(profile, &profile->Button_CButtonRight);
+    Keys->L_TRIG       = get_button_state(profile, &profile->Button_LeftTrigger);
+    Keys->R_TRIG       = get_button_state(profile, &profile->Button_RightTrigger);
+    Keys->Z_TRIG       = get_button_state(profile, &profile->Button_ZTrigger);
 
     double inputX = 0, inputY = 0;
     inputY = get_axis_state(profile, &profile->AnalogStick_Up,    1, inputY);

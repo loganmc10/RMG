@@ -111,6 +111,8 @@ private slots:
     
     void on_profileComboBox_currentIndexChanged(int value);
 
+    void on_inputTypeComboBox_currentIndexChanged(int value);
+
     void on_inputDeviceComboBox_currentIndexChanged(int value);
     void on_inputDeviceRefreshButton_clicked();
     

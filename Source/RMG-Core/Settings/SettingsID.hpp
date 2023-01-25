@@ -158,6 +158,7 @@ enum class SettingsID
 
     // Input Plugin Settings
     Input_PluggedIn,
+    Input_InputType,
     Input_DeviceType,
     Input_DeviceName,
     Input_DeviceNum,

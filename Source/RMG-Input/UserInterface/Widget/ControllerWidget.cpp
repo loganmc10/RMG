@@ -374,6 +374,41 @@ void ControllerWidget::on_profileComboBox_currentIndexChanged(int value)
     this->CheckInputDeviceSettings();
 }
 
+void ControllerWidget::on_inputTypeComboBox_currentIndexChanged(int value)
+{
+    this->controllerImageWidget->SetMouseMode((value == 1));
+    // force a re-load
+    this->controllerImageWidget->UpdateImage();
+
+    // TODO
+    return;
+
+    QWidget* widgets[] = 
+    {
+        groupBox_4,
+        deadZoneGroupBox,
+        groupBox,
+        groupBox_2,
+        groupBox_3,
+        groupBox_6,
+    };
+
+    if (value == 1)
+    { // mouse mode
+        for (const auto& widget : widgets)
+        {
+            widget->setEnabled(false);
+        }
+    }
+    else
+    { // controller mode
+        for (const auto& widget : widgets)
+        {
+            widget->setEnabled(true);
+        }
+    }
+}
+
 void ControllerWidget::on_inputDeviceComboBox_currentIndexChanged(int value)
 {
     // do nothing when value is invalid
@@ -435,7 +470,8 @@ void ControllerWidget::on_controllerPluggedCheckBox_toggled(bool value)
         this->removeProfileButton,
         //this->setupButton,
         this->resetButton,
-        this->inputDeviceComboBox,
+        this->inputTypeComboBox,
+        //this->inputDeviceComboBox,
         this->inputDeviceRefreshButton
     };
 
@@ -603,7 +639,7 @@ void ControllerWidget::on_MainDialog_SdlEvent(SDL_Event* event)
                 if (button.buttonWidget->GetInputType() == inputType &&
                     button.buttonWidget->GetInputData() == sdlButton)
                 {
-                    this->controllerImageWidget->SetButtonState(button.button, sdlButtonPressed);
+                    this->controllerImageWidget->SetControllerButtonState(button.button, sdlButtonPressed);
                 }
             }
 
@@ -718,7 +754,7 @@ void ControllerWidget::on_MainDialog_SdlEvent(SDL_Event* event)
                     button.buttonWidget->GetInputData() == sdlAxis &&
                     button.buttonWidget->GetExtraInputData() == sdlAxisDirection)
                 {
-                    this->controllerImageWidget->SetButtonState(button.button, sdlAxisButtonPressed);
+                    this->controllerImageWidget->SetControllerButtonState(button.button, sdlAxisButtonPressed);
                 }
             }
 
@@ -786,7 +822,7 @@ void ControllerWidget::on_MainDialog_SdlEvent(SDL_Event* event)
                 if (button.buttonWidget->GetInputType() == InputType::Keyboard &&
                     button.buttonWidget->GetInputData() == sdlButton)
                 {
-                    this->controllerImageWidget->SetButtonState(button.button, sdlButtonPressed);
+                    this->controllerImageWidget->SetControllerButtonState(button.button, sdlButtonPressed);
                 }
             }
 
@@ -828,6 +864,21 @@ void ControllerWidget::on_MainDialog_SdlEvent(SDL_Event* event)
 
             break;
         }
+
+        case SDL_MOUSEBUTTONDOWN:
+        case SDL_MOUSEBUTTONUP:
+        { // mouse button press
+            if (this->inputTypeComboBox->currentIndex() != 1)
+            { // no mouse
+                return;
+            }
+
+            const bool sdlMouseButtonPressed = (event->type == SDL_MOUSEBUTTONDOWN);
+            const N64MouseButton mouseButton = (event->button.button == SDL_BUTTON_LEFT ? N64MouseButton::Left : N64MouseButton::Right);
+
+            // update mouse button state
+            this->controllerImageWidget->SetMouseButtonState(mouseButton, sdlMouseButtonPressed); 
+        } break;
 
         default:
             break;
@@ -908,6 +959,7 @@ void ControllerWidget::LoadSettings(QString sectionQString)
 
     this->controllerPluggedCheckBox->setChecked(CoreSettingsGetBoolValue(SettingsID::Input_PluggedIn, section));
     this->deadZoneSlider->setValue(CoreSettingsGetIntValue(SettingsID::Input_Deadzone, section));
+    this->inputTypeComboBox->setCurrentIndex(CoreSettingsGetIntValue(SettingsID::Input_InputType, section));
     this->optionsDialogSettings.RemoveDuplicateMappings = CoreSettingsGetBoolValue(SettingsID::Input_RemoveDuplicateMappings, section);
     this->optionsDialogSettings.InvertAxis = CoreSettingsGetBoolValue(SettingsID::Input_InvertAxis, section);
     this->optionsDialogSettings.ControllerPak = CoreSettingsGetIntValue(SettingsID::Input_Pak, section);
@@ -925,6 +977,7 @@ void ControllerWidget::LoadSettings(QString sectionQString)
     }
 
     // force refresh some UI elements
+    this->on_inputTypeComboBox_currentIndexChanged(this->inputTypeComboBox->currentIndex());
     this->on_deadZoneSlider_valueChanged(this->deadZoneSlider->value());
     this->on_controllerPluggedCheckBox_toggled(this->IsPluggedIn());
 }
@@ -939,6 +992,7 @@ void ControllerWidget::SaveDefaultSettings()
     std::string section = this->settingsSection.toStdString();
 
     CoreSettingsSetValue(SettingsID::Input_PluggedIn, section, false);
+    CoreSettingsSetValue(SettingsID::Input_InputType, section, 0);
     CoreSettingsSetValue(SettingsID::Input_DeviceName, section, std::string("Keyboard"));
     CoreSettingsSetValue(SettingsID::Input_DeviceNum, section, -1);
     CoreSettingsSetValue(SettingsID::Input_Deadzone, section, 9);
@@ -975,6 +1029,7 @@ void ControllerWidget::SaveSettings()
     this->GetCurrentInputDevice(deviceName, deviceNum, true);
 
     CoreSettingsSetValue(SettingsID::Input_PluggedIn, section, this->IsPluggedIn());
+    CoreSettingsSetValue(SettingsID::Input_InputType, section, this->inputTypeComboBox->currentIndex());
     CoreSettingsSetValue(SettingsID::Input_DeviceName, section, deviceName.toStdString());
     CoreSettingsSetValue(SettingsID::Input_DeviceNum, section, deviceNum);
     CoreSettingsSetValue(SettingsID::Input_Deadzone, section, this->deadZoneSlider->value());

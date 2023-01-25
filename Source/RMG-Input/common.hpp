@@ -31,6 +31,19 @@ enum class N64ControllerButton
     Invalid
 };
 
+enum class N64MouseButton
+{
+    Left = 0,
+    Right,
+    Invalid
+};
+
+enum class InputDeviceType
+{
+    Controller = 0,
+    Mouse
+};
+
 enum class InputType
 {
     Keyboard = -1,
