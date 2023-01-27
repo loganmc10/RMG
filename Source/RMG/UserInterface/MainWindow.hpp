@@ -195,6 +195,7 @@ class MainWindow : public QMainWindow, private Ui::MainWindow
     void on_VidExt_ToggleFS(bool);
 
     void on_Core_DebugCallback(CoreDebugMessageType, QString, QString);
+    void on_Core_ResetMousPositionCallback(void);
 };
 } // namespace UserInterface
 
