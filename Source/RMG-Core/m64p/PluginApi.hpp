@@ -34,6 +34,7 @@ class PluginApi
     ptr_PluginStartup Startup;
     ptr_PluginShutdown Shutdown;
     ptr_PluginConfig Config;
+    ptr_SetResetMousePositionCallback SetResetMousePositionCallback;
     ptr_PluginGetVersion GetVersion;
 
   private:

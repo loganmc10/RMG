@@ -17,6 +17,7 @@
 
 static bool l_SetupCallbacks = false;
 static std::function<void(enum CoreDebugMessageType, std::string, std::string)> l_DebugCallbackFunc;
+static std::function<void(void)> l_ResetMousePositionCallbackFunc;
 
 //
 // Internal Functions
@@ -50,13 +51,25 @@ void CoreStateCallback(void* context, m64p_core_param param, int value)
     // TODO
 }
 
+void ResetMousePositionCallback(void)
+{
+    if (!l_SetupCallbacks)
+    {
+        return;
+    }
+
+    l_ResetMousePositionCallbackFunc();
+}
+
 //
 // Exported Functions
 //
 
-bool CoreSetupCallbacks(std::function<void(enum CoreDebugMessageType, std::string, std::string)> debugCallbackFunc)
+bool CoreSetupCallbacks(std::function<void(enum CoreDebugMessageType, std::string, std::string)> debugCallbackFunc,
+                        std::function<void(void)> resetMousePositionCallbackFunc)
 {
-    l_DebugCallbackFunc = debugCallbackFunc;
-    l_SetupCallbacks = true;
+    l_DebugCallbackFunc              = debugCallbackFunc;
+    l_ResetMousePositionCallbackFunc = resetMousePositionCallbackFunc;
+    l_SetupCallbacks                 = true;
     return true;
 }

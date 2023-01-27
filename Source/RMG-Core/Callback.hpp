@@ -21,6 +21,8 @@
 void CoreDebugCallback(void* context, int level, const char* message);
 void CoreStateCallback(void* context, m64p_core_param param, int value);
 
+void ResetMousePositionCallback(void);
+
 #endif // CORE_INTERNAL
 
 enum class CoreDebugMessageType
@@ -32,6 +34,7 @@ enum class CoreDebugMessageType
     Verbose = 5
 };
 
-bool CoreSetupCallbacks(std::function<void(enum CoreDebugMessageType, std::string, std::string)> debugCallbackFunc);
+bool CoreSetupCallbacks(std::function<void(enum CoreDebugMessageType, std::string, std::string)> debugCallbackFunc,
+                        std::function<void(void)> resetMousePositionCallbackFunc);
 
 #endif // CORE_CALLBACK_HPP

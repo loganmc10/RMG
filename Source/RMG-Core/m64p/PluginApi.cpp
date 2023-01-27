@@ -28,6 +28,7 @@ bool PluginApi::Hook(m64p_dynlib_handle handle)
     HOOK_FUNC(handle, Plugin, Startup);
     HOOK_FUNC(handle, Plugin, Shutdown);
     HOOK_FUNC_OPT(handle, Plugin, Config);
+    HOOK_FUNC_OPT(handle,       , SetResetMousePositionCallback);
     HOOK_FUNC(handle, Plugin, GetVersion);
 
     this->handle = handle;
@@ -40,6 +41,7 @@ bool PluginApi::Unhook(void)
     UNHOOK_FUNC(Plugin, Startup);
     UNHOOK_FUNC(Plugin, Shutdown);
     UNHOOK_FUNC(Plugin, Config);
+    UNHOOK_FUNC(      , SetResetMousePositionCallback);
     UNHOOK_FUNC(Plugin, GetVersion);
 
     this->handle = nullptr;
