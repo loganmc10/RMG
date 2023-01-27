@@ -40,7 +40,7 @@ bool CoreCallbacks::Init(void)
     this->LoadSettings();
 
     l_CoreCallbacks = this;
-    return CoreSetupCallbacks(this->coreDebugCallback);
+    return CoreSetupCallbacks(this->coreDebugCallback, this->resetMousePositionCallback);
 }
 
 void CoreCallbacks::Stop(void)
@@ -67,4 +67,14 @@ void CoreCallbacks::coreDebugCallback(CoreDebugMessageType type, std::string con
     }
 
     emit l_CoreCallbacks->OnCoreDebugCallback(type, QString::fromStdString(context), QString::fromStdString(message));
+}
+
+void CoreCallbacks::resetMousePositionCallback(void)
+{
+    if (l_CoreCallbacks == nullptr)
+    {
+        return;
+    }
+
+    emit l_CoreCallbacks->OnResetMousePositionCallback();
 }

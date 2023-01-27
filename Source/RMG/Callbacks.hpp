@@ -31,9 +31,11 @@ public:
 
 private:
     static void coreDebugCallback(CoreDebugMessageType type, std::string context, std::string message);
+    static void resetMousePositionCallback(void);
 
 signals:
     void OnCoreDebugCallback(CoreDebugMessageType type, QString context, QString message);
+    void OnResetMousePositionCallback(void);
 };
 
 #endif // RMG_CALLBACKS_HPP
