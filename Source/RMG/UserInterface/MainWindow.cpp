@@ -27,6 +27,7 @@
 #include <QDesktopServices>
 #include <QStyleFactory>
 #include <QFileDialog>
+#include <QDateTime>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QMimeData>
